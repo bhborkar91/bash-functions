@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<EOF >&2
+Usage: $(basename "$0") <github-org>/<github-repo>
+
+Checks for $HOME/repositories/<org>/<repo>. If present, prints the full path and exits 0.
+If missing, clones https://github.com/<org>/<repo>.git into that location and prints the path.
+EOF
+  exit 2
+}
+
+if [ "$#" -ne 1 ]; then
+  usage
+fi
+
+arg="$1"
+if ! [[ "$arg" =~ ^[^/]+/[^/]+$ ]]; then
+  echo "Error: expected argument in form <org>/<repo>; got: $arg" >&2
+  usage
+fi
+
+org="${arg%%/*}"
+repo="${arg##*/}"
+
+base="$HOME/repositories/$org"
+target="$base/$repo"
+
+# If target already exists, print and exit
+if [ -d "$target" ]; then
+  printf "%s\n" "$target"
+  exit 0
+fi
+
+# Need git
+if ! command -v git >/dev/null 2>&1; then
+  echo "Error: git is required to clone repositories" >&2
+  exit 3
+fi
+
+mkdir -p -- "$base"
+
+remote="https://github.com/$org/$repo.git"
+
+# Verify remote exists (fail early)
+if ! git ls-remote --exit-code "$remote" >/dev/null 2>&1; then
+  echo "Error: repository not found or inaccessible: $remote" >&2
+  exit 4
+fi
+
+# Clone into the target directory
+if git clone "$remote" "$target"; then
+  printf "%s\n" "$target"
+  exit 0
+else
+  echo "Error: git clone failed for $remote" >&2
+  # clean up partial clone if any
+  rm -rf -- "$target" || true
+  exit 5
+fi
