@@ -29,12 +29,14 @@ if [ "${#options[@]}" -eq 0 ]; then
   exit 1
 fi
 
+# If there is only one option, print it immediately (no user interaction)
+if [ "${#options[@]}" -eq 1 ]; then
+  printf '%s\n' "${options[0]}"
+  exit 0
+fi
+
 # If stdout is a terminal, use a simple numbered menu (bash select)
 if [ -t 1 ]; then
-  if [ "${#options[@]}" -eq 1 ]; then
-    printf '%s\n' "${options[0]}"
-    exit 0
-  fi
 
   PS3="$title: "
   select opt in "${options[@]}"; do

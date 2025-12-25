@@ -215,4 +215,12 @@ Also updated `bin/prompt` so the same `title` string is used as the terminal men
 
 ---
 
+## 20) User
+single option should print immediately without user input
+
+### Assistant
+Updated `bin/prompt` so that when only one option is provided the script prints it immediately and exits without prompting — this applies to terminal and non-terminal modes (no `select` menu or `zenity` dialog is shown). The change was committed.
+
+---
+
 *End of recorded prompts and assistant responses.*
