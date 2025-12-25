@@ -229,6 +229,25 @@ Added non-interactive test support via the `PROMPT_CHOICE` environment variable 
 
 ### User
 Reverted this change. It skips all logic and adds it's own separate test-specific logic
+
+---
+
+## 21) User (Manually Added)
+modify repo script to have a parameter -s <search string>
+if -s is provided then:
+1) search the subfolders of $HOME/repositories for folders containing the search string
+2) display a list of options using the results (use the prompt script)
+3) echo only the selected folder (output of prompt)
+if -s is not provided then continue the existing behaviour
+
+---
+
+## 22) User
+append new prompts and responses to prompts.md. include details. then add and commit all changed files
+
+### Assistant
+Appended a detailed entry documenting the `-s` search option for `bin/repo`, staged the changes, and committed them with message: "feat(repo): add -s search option to choose matching repo via prompt". Files changed: `bin/repo`, `prompts.md`. (Assistant committed the changes.)
+
 ---
 
 *End of recorded prompts and assistant responses.*
