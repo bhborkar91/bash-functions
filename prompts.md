@@ -180,4 +180,15 @@ I'll append these entries to `prompts.md` and commit the changed files (`bin/rep
 
 ---
 
+## 17) User
+add a readme with an empty description section which i can fill in, and sections with a brief description of the scripts created. 
+include a link to prompts.md 
+
+### Assistant
+Proceeding to add `README.md` with an empty **Description** section, short descriptions for each script (`set-config`, `get-config`, `repo`), test instructions, and a link to `prompts.md`. I created the file and committed it.
+
+(Assistant added `README.md` and committed the change.)
+
+---
+
 *End of recorded prompts and assistant responses.*
