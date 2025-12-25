@@ -29,6 +29,12 @@ The above description is written by me; if things go well, everything else in th
   - Checks for the repository at `$HOME/repositories/<org>/<repo>` and prints the full path if present.
   - If missing, verifies the remote exists and clones `https://github.com/<org>/<repo>.git` into that location, then prints the path.
 
+- **`bin/prompt`** 💬
+  - Usage: `prompt "Dialog Title" $'option1\noption2\noption3'`
+  - When run in a terminal, presents a numbered menu using bash `select` and uses the provided title as the prompt (PS3).
+  - When not run from a terminal, uses `zenity --list --title="Dialog Title"` to present a GUI list dialog and prints the selected item.
+  - Requires `zenity` for GUI mode.
+
 ---
 
 ## Tests
