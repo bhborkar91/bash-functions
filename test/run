@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run all test_*.sh in the test directory
+failed=0
+for t in "$(pwd)"/test/test_*.sh; do
+  [ -e "$t" ] || continue
+  echo "== Running $t =="
+  if "$t"; then
+    echo "PASS: $t"
+  else
+    echo "FAIL: $t"
+    failed=$((failed+1))
+  fi
+  echo
+done
+
+if [ "$failed" -ne 0 ]; then
+  echo "$failed tests failed"
+  exit 1
+fi
+
+echo "All tests passed"

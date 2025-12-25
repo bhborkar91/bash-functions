@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: $(basename "$0") KEY VALUE"
+  echo
+  echo "Saves KEY: VALUE into $HOME/.config/bash-function-config.json (creates dir/file if missing)."
+  exit 2
+}
+
+if [ "$#" -lt 2 ]; then
+  usage
+fi
+
+key="$1"
+shift
+value="$*"
+
+config_dir="$HOME/.config"
+config_file="$config_dir/bash-function-config.json"
+
+mkdir -p -- "$config_dir"
+
+# Ensure the file exists and is a JSON object
+if [ ! -f "$config_file" ] || [ ! -s "$config_file" ]; then
+  printf "{}\n" > "$config_file"
+fi
+
+# Update using jq
+if ! command -v jq >/dev/null 2>&1; then
+  echo "Error: 'jq' is required to update JSON configuration. Install jq and retry." >&2
+  exit 3
+fi
+
+tmpfile="$(mktemp "$config_file.XXXXXX")"
+trap 'rm -f -- "$tmpfile"' EXIT
+
+if jq --arg k "$key" --arg v "$value" 'if type=="object" then . else {} end | .[$k]=$v' "$config_file" > "$tmpfile"; then
+  mv -- "$tmpfile" "$config_file"
+  chmod 644 "$config_file" || true
+  trap - EXIT
+  echo "Saved $key to $config_file"
+  exit 0
+else
+  echo "Error: failed to update $config_file with jq" >&2
+  exit 2
+fi
