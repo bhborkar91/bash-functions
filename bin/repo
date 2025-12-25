@@ -3,13 +3,56 @@ set -euo pipefail
 
 usage() {
   cat <<EOF >&2
-Usage: $(basename "$0") <github-org>/<github-repo>
+Usage: $(basename "$0") [-s <search>] <github-org>/<github-repo>
 
-Checks for $HOME/repositories/<org>/<repo>. If present, prints the full path and exits 0.
-If missing, clones https://github.com/<org>/<repo>.git into that location and prints the path.
+If -s <search> is provided the script searches subfolders of $HOME/repositories for
+folders containing the search string (case-insensitive), presents the results as
+choices via the `prompt` helper, and echoes the selected folder path.
+
+Otherwise, when given <org>/<repo> it checks for $HOME/repositories/<org>/<repo>,
+and if missing, clones https://github.com/<org>/<repo>.git into that location and prints the path.
 EOF
   exit 2
 }
+
+# script_dir: location of this script (to find companion scripts like prompt)
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+search=""
+while getopts ":s:" opt; do
+  case "$opt" in
+    s) search="$OPTARG" ;;
+    *) usage ;;
+  esac
+done
+shift $((OPTIND-1))
+
+if [ -n "$search" ]; then
+  # Search mode
+  if [ ! -d "$HOME/repositories" ]; then
+    echo "Error: $HOME/repositories does not exist" >&2
+    exit 4
+  fi
+  # Find org/repo directories (depth 2) and filter by search string (case-insensitive)
+  mapfile -t matches < <(find "$HOME/repositories" -mindepth 2 -maxdepth 2 -type d 2>/dev/null | grep -i -- "$search" || true)
+  if [ "${#matches[@]}" -eq 0 ]; then
+    echo "No matches for '$search'" >&2
+    exit 4
+  fi
+  # Use prompt helper to let the user choose
+  if [ ! -x "$script_dir/prompt" ]; then
+    echo "Error: prompt helper not found or not executable: $script_dir/prompt" >&2
+    exit 5
+  fi
+  # Build newline-separated options string
+  options_str=$(printf '%s\n' "${matches[@]}")
+  if ! selection="$($script_dir/prompt "Select repository" "$options_str")"; then
+    # prompt returned non-zero (e.g., cancelled)
+    exit 1
+  fi
+  printf '%s\n' "$selection"
+  exit 0
+fi
 
 if [ "$#" -ne 1 ]; then
   usage
