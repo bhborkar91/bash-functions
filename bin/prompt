@@ -2,20 +2,21 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $(basename "$0") <multiline-string>"
+  echo "Usage: $(basename "$0") <title> <multiline-string>"
   echo
-  echo "Provide the options as a single, quoted argument where each line is an option."
+  echo "Provide a title (used for zenity) and the options as a single, quoted argument where each line is an option."
   echo
   echo "Example:"
-  echo "  $(basename "$0") $'option1\noption2\noption3'"
+  echo "  $(basename "$0") "Select an option" $'option1\noption2\noption3'"
   exit 2
-}
+} 
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 2 ]; then
   usage
 fi
 
-input="$1"
+title="$1"
+input="$2"
 
 # Split input into lines preserving empty lines
 options=()
@@ -50,7 +51,7 @@ else
     echo "Error: 'zenity' is required for GUI selection" >&2
     exit 3
   fi
-  selected="$(zenity --list --title="Select an option" --column="Option" "${options[@]}")"
+  selected="$(zenity --list --title="$title" --column="Option" "${options[@]}")"
   rc=$?
   if [ "$rc" -ne 0 ]; then
     # User cancelled or an error occurred

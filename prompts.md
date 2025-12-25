@@ -204,4 +204,12 @@ Adding `bin/prompt` which accepts a single, quoted multiline string where each l
 
 ---
 
+## 19) User
+update the script prompt to prepend a new argument. this new argument will be a string used for the title bar of zenity
+
+### Assistant
+Updated `bin/prompt` to accept a new first argument `title` and a second argument `multiline-string`. The usage and example were updated; in GUI mode the script now passes `--title="$title"` to `zenity`. The change was committed.
+
+---
+
 *End of recorded prompts and assistant responses.*
