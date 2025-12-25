@@ -1,0 +1,2 @@
+# Ignore repo-local test temporary directories
+/test/tmp_home.*

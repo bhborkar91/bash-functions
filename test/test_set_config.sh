@@ -47,39 +47,34 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 0
 fi
 
-tmp_home="$(mktemp -d)"
+# create a repo-local tmp dir for tests (developer is responsible for cleanup)
+tmp_home="$(mktemp -d -p "$(pwd)/test" tmp_home.XXXXXX)"
 export HOME="$tmp_home"
 
 # write a key
 if ! "$script" theme dark; then
-  rm -rf "$tmp_home"
   fail "failed to write theme=dark"
 fi
 config="$HOME/.config/bash-function-config.json"
 if ! jq -e '.theme=="dark"' "$config" >/dev/null; then
-  rm -rf "$tmp_home"
   fail "theme not set to dark"
 fi
 ok "wrote theme=dark"
 
 # update existing key
 if ! "$script" theme light; then
-  rm -rf "$tmp_home"
   fail "failed to update theme=light"
 fi
 if ! jq -e '.theme=="light"' "$config" >/dev/null; then
-  rm -rf "$tmp_home"
   fail "theme not updated to light"
 fi
 ok "updated theme to light"
 
 # write key with spaces
 if ! "$script" greeting "hello world"; then
-  rm -rf "$tmp_home"
   fail "failed to write greeting"
 fi
 if ! jq -e '.greeting=="hello world"' "$config" >/dev/null; then
-  rm -rf "$tmp_home"
   fail "greeting not set correctly"
 fi
 ok "wrote greeting with spaces"
@@ -87,11 +82,9 @@ ok "wrote greeting with spaces"
 # non-object file should be replaced with object containing the new key
 printf "[]\n" > "$config"
 if ! "$script" newkey value; then
-  rm -rf "$tmp_home"
   fail "failed to replace non-object file"
 fi
 if ! jq -e '.newkey=="value"' "$config" >/dev/null; then
-  rm -rf "$tmp_home"
   fail "non-object not replaced with object"
 fi
 ok "replaced non-object json with object"
@@ -99,12 +92,13 @@ ok "replaced non-object json with object"
 # permissions: file should be at least mode 644 (owner writable)
 mode=$(stat -c "%a" "$config")
 if [ "$mode" -lt 644 ]; then
-  rm -rf "$tmp_home"
   fail "unexpected file mode $mode"
 fi
 ok "permissions ok (mode $mode)"
 
-rm -rf "$tmp_home"
 ok "all write/update tests passed"
+
+# Note: tmp_home is left in the repo's test directory for manual cleanup if desired:
+# $ rm -r "$tmp_home"
 
 exit 0
