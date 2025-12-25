@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: $(basename "$0") <multiline-string>"
+  echo
+  echo "Provide the options as a single, quoted argument where each line is an option."
+  echo
+  echo "Example:"
+  echo "  $(basename "$0") $'option1\noption2\noption3'"
+  exit 2
+}
+
+if [ "$#" -ne 1 ]; then
+  usage
+fi
+
+input="$1"
+
+# Split input into lines preserving empty lines
+options=()
+while IFS= read -r line; do
+  options+=("$line")
+done <<<"$input"
+
+if [ "${#options[@]}" -eq 0 ]; then
+  echo "Error: no options provided" >&2
+  exit 1
+fi
+
+# If stdout is a terminal, use a simple numbered menu (bash select)
+if [ -t 1 ]; then
+  if [ "${#options[@]}" -eq 1 ]; then
+    printf '%s\n' "${options[0]}"
+    exit 0
+  fi
+
+  PS3="Choose an option (number): "
+  select opt in "${options[@]}"; do
+    if [ -n "${opt:-}" ]; then
+      printf '%s\n' "$opt"
+      exit 0
+    else
+      echo "Invalid selection." >&2
+    fi
+  done
+else
+  # Non-terminal: use zenity to present a GUI list
+  if ! command -v zenity >/dev/null 2>&1; then
+    echo "Error: 'zenity' is required for GUI selection" >&2
+    exit 3
+  fi
+  selected="$(zenity --list --title="Select an option" --column="Option" "${options[@]}")"
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    # User cancelled or an error occurred
+    exit 1
+  fi
+  printf '%s\n' "$selected"
+  exit 0
+fi

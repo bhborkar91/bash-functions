@@ -191,4 +191,17 @@ Proceeding to add `README.md` with an empty **Description** section, short descr
 
 ---
 
+## 18) User
+create a script prompt which takes a single argument
+1) if it is called from a terminal, then show all the lines in the argument as options that can be selected from
+2) if not called from a terminal, then use zenity to show a list of options from each line in the argument
+3) echo the selected argument 
+
+### Assistant
+Adding `bin/prompt` which accepts a single, quoted multiline string where each line is an option. When stdout is a terminal it shows a numbered menu using bash's `select`; if stdout is not a terminal it uses `zenity --list` to display a GUI selection. The selected option is printed to stdout; clear errors are emitted if no options are provided or if `zenity` is missing in GUI mode.
+
+(Assistant created `bin/prompt` and made it executable.)
+
+---
+
 *End of recorded prompts and assistant responses.*
