@@ -122,4 +122,39 @@ Updating this file to include the newer prompts and assistant replies (tests add
 
 ---
 
+## 11) User
+add a script to read a configuration value from the file updated in set-config
+
+### Assistant
+I'll add `bin/get-config` which uses `jq` to read a KEY from `$HOME/.config/bash-function-config.json`, prints the value, and exits non-zero with clear errors if `jq`, the config file, or the requested key are missing. (Assistant created `bin/get-config` and set it executable.)
+
+---
+
+## 12) User
+add test cases for get-config
+
+### Assistant
+Proceeding to add `test/test_get_config.sh` that verifies usage, `jq` missing behavior, missing config file handling, key-not-found behavior, successful reads, and reading values with spaces. (Assistant added `test/test_get_config.sh`.)
+
+### Assistant (follow-up)
+I ran `test/test_get_config.sh` and it initially failed with a permission error when executing `bin/get-config` (permission denied). I fixed the file mode (made `bin/get-config` executable) and re-ran the tests; they passed. I also updated `test/README.md` to mention the new test and repo-local tmp dirs.
+
+---
+
+## 13) User
+commit the new tests and docs
+
+### Assistant
+Committed the new test, updated README, and fixed `bin/get-config` permissions with the message: "tests: add get-config tests; docs: document get-config test and tmp dirs; fix get-config perms".
+
+---
+
+## 14) User
+append new prompts and responses to prompts.md. include details
+
+### Assistant
+I've appended detailed entries for the `get-config` work, the test failure and fix, and the successful test run; then I committed the updated `prompts.md` (commit message: "docs: update prompts.md with get-config and tests details").
+
+---
+
 *End of recorded prompts and assistant responses.*
