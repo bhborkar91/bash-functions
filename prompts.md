@@ -210,6 +210,9 @@ update the script prompt to prepend a new argument. this new argument will be a 
 ### Assistant
 Updated `bin/prompt` to accept a new first argument `title` and a second argument `multiline-string`. The usage and example were updated; in GUI mode the script now passes `--title="$title"` to `zenity`. The change was committed.
 
+### Assistant (follow-up)
+Also updated `bin/prompt` so the same `title` string is used as the terminal menu prompt (PS3). The terminal menu now shows the provided title as the prompt (e.g. `"Dialog Title: "`).
+
 ---
 
 *End of recorded prompts and assistant responses.*

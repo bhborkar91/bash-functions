@@ -36,7 +36,7 @@ if [ -t 1 ]; then
     exit 0
   fi
 
-  PS3="Choose an option (number): "
+  PS3="$title: "
   select opt in "${options[@]}"; do
     if [ -n "${opt:-}" ]; then
       printf '%s\n' "$opt"
