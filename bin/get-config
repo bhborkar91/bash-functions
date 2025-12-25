@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: $(basename "$0") KEY" >&2
+  exit 2
+}
+
+if [ "$#" -lt 1 ]; then
+  usage
+fi
+
+key="$1"
+config_file="$HOME/.config/bash-function-config.json"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "Error: 'jq' is required to read configuration. Install jq and retry." >&2
+  exit 3
+fi
+
+if [ ! -f "$config_file" ]; then
+  echo "Error: config file not found: $config_file" >&2
+  exit 4
+fi
+
+# Check presence of key and print its value
+if jq -e --arg k "$key" 'type=="object" and has($k)' "$config_file" >/dev/null 2>&1; then
+  jq -r --arg k "$key" '.[$k]' "$config_file"
+  exit 0
+else
+  echo "Error: key not found: $key" >&2
+  exit 1
+fi
