@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<EOF >&2
+Usage: $(basename "$0") <question>
+
+Asks the user a yes/no confirmation question.
+
+If called from a terminal, prompts in the terminal with [y/N].
+If not called from a terminal, uses zenity to show a confirmation dialog.
+
+Outputs:
+  "y" if the user confirms
+  "n" if the user declines or cancels
+
+Exit codes:
+  0 - Always (even if user declined)
+EOF
+  exit 2
+}
+
+if [ "$#" -ne 1 ]; then
+  usage
+fi
+
+question="$1"
+
+if [ -t 1 ]; then
+  # Terminal mode: use read
+  echo "$question [y/N]: " >&2
+  read -r answer
+  case "${answer,,}" in
+    y|yes) echo "y" ;;
+    *) echo "n" ;;
+  esac
+else
+  # GUI mode: use zenity
+  if ! command -v zenity >/dev/null 2>&1; then
+    echo "Error: zenity is required for GUI mode" >&2
+    exit 3
+  fi
+  
+  if zenity --question --title="Confirmation" --text="$question" 2>/dev/null; then
+    echo "y"
+  else
+    echo "n"
+  fi
+fi

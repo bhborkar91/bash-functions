@@ -319,3 +319,30 @@ Updated README.md to document the new `-s <search>` and `-c` flags for `bin/repo
 ---
 
 *End of recorded prompts and assistant responses.*
+
+## 29) User
+add a script confirm, which asks the user for a yes / no confirmation \
+it should take a question as input \
+if called from terminal, it should ask for confirmation in the terminal \
+if not called from terminal, it should use zenity to ask for confirmation \
+it should echo "y" or "n" based on the users input
+
+### Assistant
+Added `bin/confirm` that asks a yes/no question. Terminal mode prints the question with `[y/N]` and accepts `y`/`yes` (case-insensitive) as confirmation; GUI mode uses `zenity --question`. It echoes `y` or `n` and always exits 0. Made the script executable.
+
+---
+
+## 30) User
+in the repo script, if both local and remote do not exist, ask the user to confirm whether to create a new repo folder
+
+### Assistant
+Updated `bin/repo` so that when the remote is missing it calls the `confirm` helper to ask before initializing a new local repository. If the user declines, the script aborts; if confirmed, it runs `git init` and honors the `-c` flag to open VS Code.
+
+---
+
+## 31) User
+update the readme for any changes to commands \
+append new prompts and responses to prompts.md. include details. then add and commit all changed files
+
+### Assistant
+Documented the new confirmation behavior and `bin/confirm` in `README.md`, noted the zenity dependency for GUI flows, and appended these prompt/response entries to `prompts.md`.

@@ -27,7 +27,7 @@ The above description is written by me; if things go well, everything else in th
 - **`bin/repo`** 📁
   - Usage: `repo [-s <search>] [-c] <org>/<repo>`
   - Checks for the repository at `$HOME/repositories/github.com/<org>/<repo>` and prints the full path if present.
-  - If missing, verifies the remote exists and clones `https://github.com/<org>/<repo>.git` into that location, then prints the path.
+  - If missing, verifies the remote exists and clones `https://github.com/<org>/<repo>.git` into that location, then prints the path. If the remote does not exist, it asks for confirmation before creating and initializing a new local repository in that path.
   - **`-s <search>`**: Search for repositories in `$HOME/repositories` matching the search string (case-insensitive), present options via `prompt`, and print the selected path.
   - **`-c`**: Open VS Code in the target folder after determining or cloning the repository.
 
@@ -36,6 +36,12 @@ The above description is written by me; if things go well, everything else in th
   - When run in a terminal, presents a numbered menu using bash `select` and uses the provided title as the prompt (PS3).
   - When not run from a terminal, uses `zenity --list --title="Dialog Title"` to present a GUI list dialog and prints the selected item.
   - Requires `zenity` for GUI mode.
+
+- **`bin/confirm`** ✅
+  - Usage: `confirm "Question?"`
+  - When run in a terminal, prompts with `[y/N]` and outputs `y` for yes, `n` otherwise.
+  - When not run from a terminal, uses `zenity --question` to ask the same question and outputs `y` or `n` accordingly.
+  - Always exits 0; requires `zenity` for GUI mode.
 
 ---
 
@@ -52,6 +58,7 @@ The above description is written by me; if things go well, everything else in th
 ## Development notes
 
 - These scripts depend on `jq` and `git` for JSON handling and cloning respectively. Make sure they are installed.
+- GUI flows (`prompt` in GUI mode and `confirm` when not in a terminal) require `zenity`.
 
 ---
 

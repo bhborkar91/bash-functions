@@ -106,8 +106,32 @@ remote="https://github.com/$org/$repo.git"
 
 # Verify remote exists (fail early)
 if ! git ls-remote --exit-code "$remote" >/dev/null 2>&1; then
-  echo "Error: repository not found or inaccessible: $remote" >&2
-  exit 4
+  # Remote doesn't exist; ask before creating a new repo locally
+  echo "Remote not found: $remote" >&2
+  if [ ! -x "$script_dir/confirm" ]; then
+    echo "Error: confirm helper not found or not executable: $script_dir/confirm" >&2
+    exit 5
+  fi
+  response="$($script_dir/confirm "Create new repository at $target?")"
+  if [ "$response" != "y" ]; then
+    echo "Aborted by user; not creating $target" >&2
+    exit 1
+  fi
+  echo "Creating new local repository at: $target" >&2
+  if git init "$target"; then
+    printf '%s\n' "$target"
+    if [ "$open_code" = true ]; then
+      if command -v code >/dev/null 2>&1; then
+        code "$target"
+      else
+        echo "Warning: 'code' command not found, skipping VS Code open" >&2
+      fi
+    fi
+    exit 0
+  else
+    echo "Error: git init failed for $target" >&2
+    exit 5
+  fi
 fi
 
 # Clone into the target directory
