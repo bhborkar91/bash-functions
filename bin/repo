@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<EOF >&2
-Usage: $(basename "$0") [-s <search>] <github-org>/<github-repo>
+Usage: $(basename "$0") [-s <search>] [-c] <github-org>/<github-repo>
 
 If -s <search> is provided the script searches subfolders of $HOME/repositories for
 folders containing the search string (case-insensitive), presents the results as
@@ -11,6 +11,8 @@ choices via the `prompt` helper, and echoes the selected folder path.
 
 Otherwise, when given <org>/<repo> it checks for $HOME/repositories/github.com/<org>/<repo>,
 and if missing, clones https://github.com/<org>/<repo>.git into that location and prints the path.
+
+If -c is provided, opens VS Code in the target folder after determining the path.
 EOF
   exit 2
 }
@@ -19,9 +21,11 @@ EOF
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 search=""
-while getopts ":s:" opt; do
+open_code=false
+while getopts ":s:c" opt; do
   case "$opt" in
     s) search="$OPTARG" ;;
+    c) open_code=true ;;
     *) usage ;;
   esac
 done
@@ -51,6 +55,13 @@ if [ -n "$search" ]; then
     exit 1
   fi
   printf '%s\n' "$selection"
+  if [ "$open_code" = true ]; then
+    if command -v code >/dev/null 2>&1; then
+      code "$selection"
+    else
+      echo "Warning: 'code' command not found, skipping VS Code open" >&2
+    fi
+  fi
   exit 0
 fi
 
@@ -72,7 +83,14 @@ target="$base/$repo"
 
 # If target already exists, print and exit
 if [ -d "$target" ]; then
-  printf "%s\n" "$target"
+  printf '%s\n' "$target"
+  if [ "$open_code" = true ]; then
+    if command -v code >/dev/null 2>&1; then
+      code "$target"
+    else
+      echo "Warning: 'code' command not found, skipping VS Code open" >&2
+    fi
+  fi
   exit 0
 fi
 
@@ -94,7 +112,14 @@ fi
 
 # Clone into the target directory
 if git clone "$remote" "$target"; then
-  printf "%s\n" "$target"
+  printf '%s\n' "$target"
+  if [ "$open_code" = true ]; then
+    if command -v code >/dev/null 2>&1; then
+      code "$target"
+    else
+      echo "Warning: 'code' command not found, skipping VS Code open" >&2
+    fi
+  fi
   exit 0
 else
   echo "Error: git clone failed for $remote" >&2

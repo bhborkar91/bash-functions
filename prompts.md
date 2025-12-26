@@ -271,6 +271,38 @@ append new prompts and responses to prompts.md. include details. then add and co
 ### Assistant
 Appending the new prompt/response entries to `prompts.md` and committing all changes.
 
+(Assistant updated `prompts.md` and committed with message: "feat(repo): clone into github.com/<org>/<repo> format; docs: update prompts.md".)
+
+---
+
+## 25) User
+add a parameter -c to the repo script
+if -c is passed - open vscode in the target folder
+
+### Assistant
+Added `-c` flag to `bin/repo`. When provided, the script opens VS Code (using the `code` command) in the target folder after determining or cloning the repository. Works in both search mode and clone mode. If the `code` command is not found, a warning is printed to stderr and the script continues normally.
+
+(Assistant updated `bin/repo` to add `-c` flag and VS Code integration.)
+
+---
+
+## 26) User
+$ repo -c bhborkar91/golang-test
+/home/bhushan/repositories/github.com/bhborkar91/bash-functions/bin/repo: line 86: syntax error near unexpected token `then'
+
+### Assistant
+Fixed syntax errors in `bin/repo` caused by missing newlines between `printf` statements and subsequent `if` blocks. The issue was in both the "target already exists" block and the "git clone" block where the newline was missing after `printf '%s\n' "$target"`.
+
+(Assistant fixed the syntax errors in `bin/repo`.)
+
+---
+
+## 27) User
+append new prompts and responses to prompts.md. include details. then add and commit all changed files
+
+### Assistant
+Appending entries for the `-c` flag addition and syntax error fix to `prompts.md`, then committing all changes.
+
 (Assistant is updating `prompts.md` and preparing to commit all changed files.)
 
 ---
