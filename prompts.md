@@ -303,7 +303,18 @@ append new prompts and responses to prompts.md. include details. then add and co
 ### Assistant
 Appending entries for the `-c` flag addition and syntax error fix to `prompts.md`, then committing all changes.
 
-(Assistant is updating `prompts.md` and preparing to commit all changed files.)
+(Assistant updated `prompts.md` and committed with message: "feat(repo): add -c flag to open VS Code in target folder; fix: syntax errors; docs: update prompts.md".)
+
+---
+
+## 28) User
+update the readme for any changes to commands
+append new prompts and responses to prompts.md. include details. then add and commit all changed files
+
+### Assistant
+Updated README.md to document the new `-s <search>` and `-c` flags for `bin/repo`, including the updated path format (`github.com/<org>/<repo>`). Appended this entry to `prompts.md` and committing all changes.
+
+(Assistant is updating README.md and prompts.md, then preparing to commit.)
 
 ---
 
