@@ -119,6 +119,13 @@ if ! git ls-remote --exit-code "$remote" >/dev/null 2>&1; then
   fi
   echo "Creating new local repository at: $target" >&2
   if git init "$target"; then
+    # Add a default .gitignore for new repos
+    cat >"$target/.gitignore" <<'EOF'
+.DS_Store
+Thumbs.db
+*.log
+.env
+EOF
     printf '%s\n' "$target"
     if [ "$open_code" = true ]; then
       if command -v code >/dev/null 2>&1; then

@@ -346,3 +346,20 @@ append new prompts and responses to prompts.md. include details. then add and co
 
 ### Assistant
 Documented the new confirmation behavior and `bin/confirm` in `README.md`, noted the zenity dependency for GUI flows, and appended these prompt/response entries to `prompts.md`.
+
+---
+
+## 32) User
+when creating a new repo, also add a default gitignore file
+
+### Assistant
+Updated `bin/repo` to seed a default `.gitignore` (ignoring `.DS_Store`, `Thumbs.db`, `*.log`, `.env`) whenever a new local repository is initialized after confirming the remote is missing.
+
+---
+
+## 33) User
+update the readme for any changes to commands \
+append new prompts and responses to prompts.md. include details. then add and commit all changed files
+
+### Assistant
+Updated `README.md` to mention the default `.gitignore` creation when initializing a new repo and appended these prompt/response entries to `prompts.md`.
