@@ -9,7 +9,7 @@ If -s <search> is provided the script searches subfolders of $HOME/repositories 
 folders containing the search string (case-insensitive), presents the results as
 choices via the `prompt` helper, and echoes the selected folder path.
 
-Otherwise, when given <org>/<repo> it checks for $HOME/repositories/<org>/<repo>,
+Otherwise, when given <org>/<repo> it checks for $HOME/repositories/github.com/<org>/<repo>,
 and if missing, clones https://github.com/<org>/<repo>.git into that location and prints the path.
 EOF
   exit 2
@@ -33,8 +33,8 @@ if [ -n "$search" ]; then
     echo "Error: $HOME/repositories does not exist" >&2
     exit 4
   fi
-  # Find org/repo directories (depth 2) and filter by search string (case-insensitive)
-  mapfile -t matches < <(find "$HOME/repositories" -mindepth 2 -maxdepth 2 -type d 2>/dev/null | grep -i -- "$search" || true)
+  # Find org/repo directories (depth 3: github.com/org/repo) and filter by search string (case-insensitive)
+  mapfile -t matches < <(find "$HOME/repositories" -mindepth 3 -maxdepth 3 -type d 2>/dev/null | grep -i -- "$search" || true)
   if [ "${#matches[@]}" -eq 0 ]; then
     echo "No matches for '$search'" >&2
     exit 4
@@ -67,7 +67,7 @@ fi
 org="${arg%%/*}"
 repo="${arg##*/}"
 
-base="$HOME/repositories/$org"
+base="$HOME/repositories/github.com/$org"
 target="$base/$repo"
 
 # If target already exists, print and exit
