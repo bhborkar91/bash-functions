@@ -363,3 +363,35 @@ append new prompts and responses to prompts.md. include details. then add and co
 
 ### Assistant
 Updated `README.md` to mention the default `.gitignore` creation when initializing a new repo and appended these prompt/response entries to `prompts.md`.
+
+---
+
+## 34) User
+modify repo script to
+- be able to accept options after or before the org and repo name
+- in the deployed list of repo's omit the $HOME/repositories/github.com
+
+### Assistant
+Updated `bin/repo` to allow flexible option ordering (options can now appear before or after the org/repo argument). Replaced the `getopts`-based parsing with a custom `while` loop that handles options and positional arguments separately. When using `-s` (search mode), the displayed list now shows only `org/repo` by stripping the `$HOME/repositories/github.com/` prefix, making the output cleaner and more readable. The full path is still used internally and returned as the script's output.
+
+**Changes made:**
+- Replaced `getopts` with manual argument parsing loop that supports flexible option placement
+- Added `repo_arg` variable to capture the positional org/repo argument
+- In search mode, create `display_options` array with prefix stripped for display
+- Pass cleaned options to `prompt` for user selection
+- Reconstruct full path from selected display option before using it
+
+Examples of now-valid usage:
+- `repo -c org/repo`
+- `repo org/repo -c`
+- `repo -s search -c`
+
+---
+
+## 35) User
+update the readme for any changes to commands
+append new prompts and responses to prompts.md. include details. then add and commit all changed files
+
+### Assistant
+Updated `README.md` to document the flexible option placement and cleaner search display format for `bin/repo`. Appended this prompt/response entry to `prompts.md` with full implementation details. Now staging and committing all changed files.
+

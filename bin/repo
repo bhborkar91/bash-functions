@@ -22,14 +22,39 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 search=""
 open_code=false
-while getopts ":s:c" opt; do
-  case "$opt" in
-    s) search="$OPTARG" ;;
-    c) open_code=true ;;
-    *) usage ;;
+repo_arg=""
+
+# Parse all arguments to allow options before or after the org/repo argument
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -s)
+      if [ -n "$2" ] && [[ ! "$2" =~ ^- ]]; then
+        search="$2"
+        shift 2
+      else
+        echo "Error: -s requires an argument" >&2
+        usage
+      fi
+      ;;
+    -c)
+      open_code=true
+      shift
+      ;;
+    -*)
+      echo "Error: unknown option $1" >&2
+      usage
+      ;;
+    *)
+      if [ -z "$repo_arg" ]; then
+        repo_arg="$1"
+      else
+        echo "Error: multiple positional arguments provided" >&2
+        usage
+      fi
+      shift
+      ;;
   esac
 done
-shift $((OPTIND-1))
 
 if [ -n "$search" ]; then
   # Search mode
@@ -48,13 +73,22 @@ if [ -n "$search" ]; then
     echo "Error: prompt helper not found or not executable: $script_dir/prompt" >&2
     exit 5
   fi
+  # Strip $HOME/repositories/github.com prefix for display
+  prefix="$HOME/repositories/github.com/"
+  display_options=()
+  for match in "${matches[@]}"; do
+    display_options+=("${match#"$prefix"}")
+  done
   # Build newline-separated options string
-  options_str=$(printf '%s\n' "${matches[@]}")
+  options_str=$(printf '%s\n' "${display_options[@]}")
   if ! selection="$($script_dir/prompt "Select repository" "$options_str")"; then
     # prompt returned non-zero (e.g., cancelled)
     exit 1
   fi
-  printf '%s\n' "$selection"
+  # Reconstruct full path from the selected display option
+  full_path="$HOME/repositories/github.com/$selection"
+  printf '%s\n' "$full_path"
+  selection="$full_path"
   if [ "$open_code" = true ]; then
     if command -v code >/dev/null 2>&1; then
       code "$selection"
@@ -65,11 +99,11 @@ if [ -n "$search" ]; then
   exit 0
 fi
 
-if [ "$#" -ne 1 ]; then
+if [ -z "$repo_arg" ]; then
   usage
 fi
 
-arg="$1"
+arg="$repo_arg"
 if ! [[ "$arg" =~ ^[^/]+/[^/]+$ ]]; then
   echo "Error: expected argument in form <org>/<repo>; got: $arg" >&2
   usage

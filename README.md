@@ -25,10 +25,10 @@ The above description is written by me; if things go well, everything else in th
   - Exits non-zero with a clear error if `jq`, the config file, or the key is missing.
 
 - **`bin/repo`** 📁
-  - Usage: `repo [-s <search>] [-c] <org>/<repo>`
+  - Usage: `repo [-s <search>] [-c] <org>/<repo>` (options can appear before or after the org/repo argument)
   - Checks for the repository at `$HOME/repositories/github.com/<org>/<repo>` and prints the full path if present.
   - If missing, verifies the remote exists and clones `https://github.com/<org>/<repo>.git` into that location, then prints the path. If the remote does not exist, it asks for confirmation before creating and initializing a new local repository in that path and seeds a default `.gitignore`.
-  - **`-s <search>`**: Search for repositories in `$HOME/repositories` matching the search string (case-insensitive), present options via `prompt`, and print the selected path.
+  - **`-s <search>`**: Search for repositories in `$HOME/repositories` matching the search string (case-insensitive), present options via `prompt` (displaying `org/repo` without the `$HOME/repositories/github.com` prefix for cleaner output), and print the selected full path.
   - **`-c`**: Open VS Code in the target folder after determining or cloning the repository.
 
 - **`bin/prompt`** 💬
