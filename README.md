@@ -12,6 +12,19 @@ The above description is written by me; if things go well, everything else in th
 
 ---
 
+## Installation
+
+Run `./install.sh` to add the `bin/` folder to your PATH. The script:
+- Adds the bin directory to `~/.bashrc`, `~/.zshrc` (if they exist), and `~/.profile`
+- Is idempotent (won't add duplicates if run multiple times)
+- Enables scripts to be called from both terminal and GUI launchers (Alt+F2)
+
+After installation:
+- **For terminal**: restart your terminal or run `source ~/.bashrc`
+- **For GUI launchers**: log out and log back in
+
+---
+
 ## Scripts
 
 - **`bin/set-config`** 🔧

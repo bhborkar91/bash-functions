@@ -395,3 +395,21 @@ append new prompts and responses to prompts.md. include details. then add and co
 ### Assistant
 Updated `README.md` to document the flexible option placement and cleaner search display format for `bin/repo`. Appended this prompt/response entry to `prompts.md` with full implementation details. Now staging and committing all changed files.
 
+
+---
+
+## 36) User
+add an install.sh script that adds the bin folder from this repository to the user's path, so that it can be called from both terminal and from alt+f2 popup
+
+### Assistant
+Created `install.sh` that adds the `bin/` directory to PATH for both terminal and GUI sessions. The script:
+- Determines the absolute path to the `bin/` directory
+- Adds `export PATH="<bin-path>:$PATH"` to `~/.bashrc`, `~/.zshrc` (if they exist), and `~/.profile`
+- Checks for existing entries before adding (idempotent)
+- Provides clear instructions for activation (restart terminal or source rc file for terminal; log out/in for GUI)
+- Made executable with `chmod +x`
+
+The `~/.profile` addition ensures the PATH is set for GUI sessions, making scripts available in Alt+F2 launchers and other desktop environment run dialogs.
+
+Updated `README.md` with an Installation section documenting the install script and its usage.
+
