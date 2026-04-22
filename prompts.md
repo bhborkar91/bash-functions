@@ -413,3 +413,40 @@ The `~/.profile` addition ensures the PATH is set for GUI sessions, making scrip
 
 Updated `README.md` with an Installation section documenting the install script and its usage.
 
+---
+
+## 37) User
+create a shell script "get-credential <key>" that retrieves and echoes a secret
+by default, it should simply ask the user using the read command
+optional parameters:
+- --1p: instead of asking user for input, retrieve the credential from 1password
+- --1p-label: retrieve using this label from 1password (default is password)
+
+### Assistant
+Created `bin/get-credential` that retrieves and echoes a secret with flexible input methods:
+
+**Default behavior:**
+- Prompts user for input using `read -rs` (masked/hidden input)
+- Echoes the entered credential to stdout
+
+**Optional parameters:**
+- `--1p`: Retrieve credential from 1Password CLI (`op`) instead of prompting
+- `--1p-label <label>`: Specify the field label to retrieve from 1Password (default: `password`)
+
+**Key features:**
+- Validates at least one argument (the key)
+- Handles both positional and optional arguments
+- Interactive prompt is hidden using `read -rs` flag
+- 1Password integration uses `op item get` with JSON parsing via `jq`
+- Comprehensive error handling for missing arguments and unknown options
+- Made executable with `chmod +x`
+
+**Examples:**
+- `get-credential database_password` — prompts user
+- `get-credential mykey --1p` — retrieves password field from 1Password
+- `get-credential mykey --1p --1p-label username` — retrieves username field from 1Password
+
+**Dependencies:**
+- `jq` (for 1Password JSON parsing)
+- `op` (1Password CLI, only needed for `--1p` mode)
+
