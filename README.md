@@ -2,15 +2,7 @@
 
 ## Description
 
-This project serves 2 purposes:
-- I want to build a repository of helper shell scripts that can ideally be installed easily whenever I move to a new system / re-install my operating system.
-- I want to see what GenAI can do.
-
-So the intent here is to create all the scripts, tests, and documentation solely through GenAI (and of course, read and review them for any unsafe behaviour before using them).
-
-The above description is written by me; if things go well, everything else in this repo will be AI-generated. Ideally, I will also document the prompts used.
-
----
+The purpose of this project is to build an easily-installable repository of common scripts and aliases that I might have use of.
 
 ## Installation
 
