@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<EOF >&2
+Usage: $(basename "$0") <subcommand>
+
+Subcommands:
+  in    Print incoming commits (present in upstream but not in HEAD).
+  out   Print outgoing commits (present in HEAD but not in upstream).
+
+Output format:
+  [date] [commit id] message [committer] (branch and tag info)
+EOF
+  exit 2
+}
+
+ensure_git_repo() {
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Error: not inside a git repository" >&2
+    exit 1
+  fi
+}
+
+get_upstream_ref() {
+  if ! git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null; then
+    current_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+    echo "Error: no upstream configured for branch '$current_branch'" >&2
+    echo "Hint: set one with: git branch --set-upstream-to origin/$current_branch" >&2
+    exit 1
+  fi
+}
+
+print_commit_log() {
+  local rev_range="$1"
+
+  git --no-pager log --color=always "$rev_range" \
+    --date=short \
+    --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)'
+
+  # Keep output newline-terminated for predictable terminal rendering.
+  echo
+}
+
+cmd_in() {
+  local upstream_ref
+
+  ensure_git_repo
+  upstream_ref="$(get_upstream_ref)"
+
+  # Show commits present in upstream but not in HEAD (incoming commits).
+  print_commit_log "HEAD..$upstream_ref"
+}
+
+cmd_out() {
+  local upstream_ref
+
+  ensure_git_repo
+  upstream_ref="$(get_upstream_ref)"
+
+  # Show commits present in HEAD but not in upstream (outgoing commits).
+  print_commit_log "$upstream_ref..HEAD"
+}
+
+main() {
+  local subcommand
+
+  if [ "$#" -ne 1 ]; then
+    usage
+  fi
+
+  subcommand="$1"
+
+  case "$subcommand" in
+    in)
+      cmd_in
+      ;;
+    out)
+      cmd_out
+      ;;
+    *)
+      usage
+      ;;
+  esac
+}
+
+main "$@"

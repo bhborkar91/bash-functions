@@ -48,6 +48,16 @@ After installation:
   - When not run from a terminal, uses `zenity --question` to ask the same question and outputs `y` or `n` accordingly.
   - Always exits 0; requires `zenity` for GUI mode.
 
+- **`bin/git-ops`** 🌿
+  - Usage: `git-ops <subcommand>`
+  - Subcommands:
+    - `in`: Prints incoming commits (commits in upstream that are not in `HEAD`).
+    - `out`: Prints outgoing commits (commits in `HEAD` that are not in upstream).
+  - Prints commits in a colorized format:
+    `[date] [commit id] message [committer] (branch and tag info)`
+  - Output is always newline-terminated.
+  - Exits with a clear error when run outside a Git repository or when no upstream is configured for the current branch.
+
 ---
 
 ## Tests
