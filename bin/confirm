@@ -26,7 +26,7 @@ fi
 
 question="$1"
 
-if [ -t 1 ]; then
+if [ -t 1 ] || [ -n "${PS1:-}" ]; then
   # Terminal mode: use read
   echo "$question [y/N]: " >&2
   read -r answer

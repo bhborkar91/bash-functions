@@ -36,7 +36,7 @@ if [ "${#options[@]}" -eq 1 ]; then
 fi
 
 # If stdout is a terminal, use a simple numbered menu (bash select)
-if [ -t 1 ]; then
+if [ -t 1 ] || [ -n "${PS1:-}" ]; then
 
   PS3="$title: "
   select opt in "${options[@]}"; do
