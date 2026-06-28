@@ -56,5 +56,6 @@ append_if_missing "$bashrc_file" "source \"\$HOME/.bash/git-prompt.sh\""
 
 git config --global alias.in '!bash -c "git-ops in"'
 git config --global alias.out '!bash -c "git-ops out"'
+git config --global alias.hist '!bash -c "git-ops hist"'
 
 echo "Installation complete. Restart your shell or run: source $bashrc_file"
