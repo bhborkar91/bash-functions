@@ -25,8 +25,9 @@ After installation:
   - Uses `jq` to update JSON safely and writes atomically via a temporary file.
 
 - **`bin/get-config`** 🔎
-  - Usage: `get-config KEY`
+  - Usage: `get-config KEY [DEFAULT]`
   - Reads `KEY` from `$HOME/.config/bash-function-config.json` and prints the value.
+  - If `KEY` is missing, prints `DEFAULT` when provided.
   - Exits non-zero with a clear error if `jq`, the config file, or the key is missing.
 
 - **`bin/repo`** 📁

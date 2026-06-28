@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $(basename "$0") KEY" >&2
+  echo "Usage: $(basename "$0") KEY [DEFAULT]" >&2
   exit 2
 }
 
@@ -11,21 +11,37 @@ if [ "$#" -lt 1 ]; then
 fi
 
 key="$1"
+has_default=0
+default=""
+
+if [ "$#" -ge 2 ]; then
+  has_default=1
+  default="$2"
+fi
+
 config_file="$HOME/.config/bash-function-config.json"
+
+if [ ! -f "$config_file" ]; then
+  if [ "$has_default" -eq 1 ]; then
+    printf '%s\n' "$default"
+    exit 0
+  fi
+
+  echo "Error: config file not found: $config_file" >&2
+  exit 4
+fi
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "Error: 'jq' is required to read configuration. Install jq and retry." >&2
   exit 3
 fi
 
-if [ ! -f "$config_file" ]; then
-  echo "Error: config file not found: $config_file" >&2
-  exit 4
-fi
-
-# Check presence of key and print its value
+# Check presence of key and print its value, or fall back to the default if provided.
 if jq -e --arg k "$key" 'type=="object" and has($k)' "$config_file" >/dev/null 2>&1; then
   jq -r --arg k "$key" '.[$k]' "$config_file"
+  exit 0
+elif [ "$has_default" -eq 1 ]; then
+  printf '%s\n' "$default"
   exit 0
 else
   echo "Error: key not found: $key" >&2

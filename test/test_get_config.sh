@@ -58,6 +58,11 @@ config="$HOME/.config/bash-function-config.json"
 if [ -f "$config" ]; then
   fail "expected no config file at start"
 fi
+val="$($script somekey fallback)"
+if [ "$val" != "fallback" ]; then
+  fail "expected default fallback when config missing, got '$val'"
+fi
+ok "default value returned when config missing"
 if "$script" somekey >/dev/null 2>&1; then
   fail "expected non-zero exit when config missing"
 else
@@ -80,6 +85,12 @@ if "$script" nonexist >/dev/null 2>&1; then
 else
   ok "missing key returns non-zero"
 fi
+
+val="$($script nonexist "fallback value")"
+if [ "$val" != "fallback value" ]; then
+  fail "expected default fallback value for missing key, got '$val'"
+fi
+ok "default value returned for missing key"
 
 # 6) values with spaces
 if ! "$set_script" greeting "hello world"; then
