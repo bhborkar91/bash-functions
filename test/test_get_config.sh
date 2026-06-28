@@ -102,9 +102,6 @@ if [ "$val" != "hello world" ]; then
 fi
 ok "read value with spaces"
 
-# Note: tmp_home is intentionally left in the repo's test directory for manual inspection/cleanup:
-# $ rm -r "$tmp_home"
-
 echo "tmp_home=$tmp_home"
 ok "all get-config tests passed"
 

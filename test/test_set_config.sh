@@ -98,7 +98,4 @@ ok "permissions ok (mode $mode)"
 
 ok "all write/update tests passed"
 
-# Note: tmp_home is left in the repo's test directory for manual cleanup if desired:
-# $ rm -r "$tmp_home"
-
 exit 0

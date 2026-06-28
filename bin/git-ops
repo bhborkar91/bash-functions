@@ -3,11 +3,16 @@ set -euo pipefail
 
 usage() {
   cat <<EOF >&2
-Usage: $(basename "$0") <subcommand>
+Usage: $(basename "$0") <subcommand> [args]
 
 Subcommands:
   in    Print incoming commits (present in upstream but not in HEAD).
+    By default, merge commits are excluded.
+    Pass --include-merges to include merge commits.
   out   Print outgoing commits (present in HEAD but not in upstream).
+    By default, merge commits are excluded.
+    Pass --include-merges to include merge commits.
+  hist  Print git history using the same formatted output as git-ops.
 
 Output format:
   [date] [commit id] message [committer] (branch and tag info)
@@ -33,8 +38,67 @@ get_upstream_ref() {
 
 print_commit_log() {
   local rev_range="$1"
+  local include_merges="$2"
 
-  git --no-pager log --color=always "$rev_range" \
+  if [ "$include_merges" = "true" ]; then
+    git --no-pager log --color=always "$rev_range" \
+      --date=short \
+      --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)'
+  else
+    git --no-pager log --color=always "$rev_range" \
+      --no-merges \
+      --date=short \
+      --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)'
+  fi
+
+  # Keep output newline-terminated for predictable terminal rendering.
+  echo
+}
+
+parse_include_merges_flag() {
+  if [ "$#" -eq 0 ]; then
+    echo "false"
+    return 0
+  fi
+
+  if [ "$#" -eq 1 ] && [ "$1" = "--include-merges" ]; then
+    echo "true"
+    return 0
+  fi
+
+  usage
+}
+
+cmd_in() {
+  local upstream_ref
+  local include_merges
+
+  include_merges="$(parse_include_merges_flag "$@")"
+
+  ensure_git_repo
+  upstream_ref="$(get_upstream_ref)"
+
+  # Show commits present in upstream but not in HEAD (incoming commits).
+  print_commit_log "HEAD..$upstream_ref" "$include_merges"
+}
+
+cmd_out() {
+  local upstream_ref
+  local include_merges
+
+  include_merges="$(parse_include_merges_flag "$@")"
+
+  ensure_git_repo
+  upstream_ref="$(get_upstream_ref)"
+
+  # Show commits present in HEAD but not in upstream (outgoing commits).
+  print_commit_log "$upstream_ref..HEAD" "$include_merges"
+}
+
+cmd_hist() {
+  ensure_git_repo
+
+  git log --color=always "$@" \
     --date=short \
     --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)'
 
@@ -42,41 +106,25 @@ print_commit_log() {
   echo
 }
 
-cmd_in() {
-  local upstream_ref
-
-  ensure_git_repo
-  upstream_ref="$(get_upstream_ref)"
-
-  # Show commits present in upstream but not in HEAD (incoming commits).
-  print_commit_log "HEAD..$upstream_ref"
-}
-
-cmd_out() {
-  local upstream_ref
-
-  ensure_git_repo
-  upstream_ref="$(get_upstream_ref)"
-
-  # Show commits present in HEAD but not in upstream (outgoing commits).
-  print_commit_log "$upstream_ref..HEAD"
-}
-
 main() {
   local subcommand
 
-  if [ "$#" -ne 1 ]; then
+  if [ "$#" -lt 1 ]; then
     usage
   fi
 
   subcommand="$1"
+  shift
 
   case "$subcommand" in
     in)
-      cmd_in
+      cmd_in "$@"
       ;;
     out)
-      cmd_out
+      cmd_out "$@"
+      ;;
+    hist)
+      cmd_hist "$@"
       ;;
     *)
       usage

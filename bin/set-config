@@ -33,7 +33,6 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 tmpfile="$(mktemp "$config_file.XXXXXX")"
-trap 'rm -f -- "$tmpfile"' EXIT
 
 if jq --arg k "$key" --arg v "$value" 'if type=="object" then . else {} end | .[$k]=$v' "$config_file" > "$tmpfile"; then
   mv -- "$tmpfile" "$config_file"
