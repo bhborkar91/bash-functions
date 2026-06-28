@@ -26,8 +26,21 @@ fi
 
 question="$1"
 
-if [ -t 1 ] || [ -n "${PS1:-}" ]; then
-  # Terminal mode: use read
+ui_mode_config="$(get-config bash-functions.ui-mode "")"
+
+if [ "$ui_mode_config" = "terminal" ]; then
+  ui_mode="terminal"
+elif [ "$ui_mode_config" = "zenity" ]; then
+  ui_mode="zenity"
+elif ! command -v zenity >/dev/null 2>&1; then
+  ui_mode="terminal"
+elif [ -t 1 ] || [ -n "${PS1:-}" ]; then
+  ui_mode="terminal"
+else
+  ui_mode="zenity"
+fi
+
+if [ "$ui_mode" = "terminal" ]; then
   echo "$question [y/N]: " >&2
   read -r answer
   case "${answer,,}" in
@@ -35,12 +48,6 @@ if [ -t 1 ] || [ -n "${PS1:-}" ]; then
     *) echo "n" ;;
   esac
 else
-  # GUI mode: use zenity
-  if ! command -v zenity >/dev/null 2>&1; then
-    echo "Error: zenity is required for GUI mode" >&2
-    exit 3
-  fi
-  
   if zenity --question --title="Confirmation" --text="$question" 2>/dev/null; then
     echo "y"
   else

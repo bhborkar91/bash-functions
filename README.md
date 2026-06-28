@@ -39,15 +39,20 @@ After installation:
 
 - **`bin/prompt`** 💬
   - Usage: `prompt "Dialog Title" $'option1\noption2\noption3'`
-  - When run in a terminal, presents a numbered menu using bash `select` and uses the provided title as the prompt (PS3).
-  - When not run from a terminal, uses `zenity --list --title="Dialog Title"` to present a GUI list dialog and prints the selected item.
-  - Requires `zenity` for GUI mode.
+  - UI mode is controlled by `bash-functions.ui-mode` in config (`set-config bash-functions.ui-mode <value>`).
+  - Supported values:
+    - `terminal`: always use terminal mode (`select`)
+    - `zenity`: always attempt to use `zenity --list`
+    - empty/unset: auto mode (if `zenity` is missing use terminal; otherwise choose terminal when interactive and `zenity` when non-interactive)
 
 - **`bin/confirm`** ✅
   - Usage: `confirm "Question?"`
-  - When run in a terminal, prompts with `[y/N]` and outputs `y` for yes, `n` otherwise.
-  - When not run from a terminal, uses `zenity --question` to ask the same question and outputs `y` or `n` accordingly.
-  - Always exits 0; requires `zenity` for GUI mode.
+  - UI mode is controlled by `bash-functions.ui-mode` in config (`set-config bash-functions.ui-mode <value>`).
+  - Supported values:
+    - `terminal`: always prompt in terminal with `[y/N]`
+    - `zenity`: always attempt `zenity --question`
+    - empty/unset: auto mode (if `zenity` is missing use terminal; otherwise choose terminal when interactive and `zenity` when non-interactive)
+  - Outputs `y` for yes and `n` for all other outcomes, and always exits 0.
 
 - **`bin/git-ops`** 🌿
   - Usage: `git-ops <subcommand>`
@@ -74,7 +79,7 @@ After installation:
 ## Development notes
 
 - These scripts depend on `jq` and `git` for JSON handling and cloning respectively. Make sure they are installed.
-- GUI flows (`prompt` in GUI mode and `confirm` when not in a terminal) require `zenity`.
+- `zenity` is only required when a command actually runs in zenity mode (explicitly via `bash-functions.ui-mode=zenity` or auto mode in non-interactive contexts).
 
 ---
 

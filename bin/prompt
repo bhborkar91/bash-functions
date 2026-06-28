@@ -35,8 +35,21 @@ if [ "${#options[@]}" -eq 1 ]; then
   exit 0
 fi
 
-# If stdout is a terminal, use a simple numbered menu (bash select)
-if [ -t 1 ] || [ -n "${PS1:-}" ]; then
+ui_mode_config="$(get-config bash-functions.ui-mode "")"
+
+if [ "$ui_mode_config" = "terminal" ]; then
+  ui_mode="terminal"
+elif [ "$ui_mode_config" = "zenity" ]; then
+  ui_mode="zenity"
+elif ! command -v zenity >/dev/null 2>&1; then
+  ui_mode="terminal"
+elif [ -t 1 ] || [ -n "${PS1:-}" ]; then
+  ui_mode="terminal"
+else
+  ui_mode="zenity"
+fi
+
+if [ "$ui_mode" = "terminal" ]; then
 
   PS3="$title: "
   select opt in "${options[@]}"; do
@@ -48,11 +61,6 @@ if [ -t 1 ] || [ -n "${PS1:-}" ]; then
     fi
   done
 else
-  # Non-terminal: use zenity to present a GUI list
-  if ! command -v zenity >/dev/null 2>&1; then
-    echo "Error: 'zenity' is required for GUI selection" >&2
-    exit 3
-  fi
   selected="$(zenity --list --title="$title" --column="Option" "${options[@]}")"
   rc=$?
   if [ "$rc" -ne 0 ]; then
