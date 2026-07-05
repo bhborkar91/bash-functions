@@ -125,8 +125,10 @@ if [[ "$PROMPT_COMMAND" != *"refresh_sources"* ]]; then
 	PROMPT_COMMAND="refresh_sources; ${PROMPT_COMMAND:-:}"
 fi
 
+auto-refresh-config-upsert "${BASH_SOURCE[0]}" "10"
+
 # section: vars
-PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)") \$ '
+PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)") \n\$ '
 export GIT_PS1_SHOWUPSTREAM=verbose
 export GIT_PS1_SHOWDIRTYSTATE=1
 
@@ -142,6 +144,8 @@ alias gco='git checkout '
 alias gcp='git cherry-pick '
 alias gd='git diff'
 alias ghi='git hist'
+alias gm='git merge '
+alias gpl='git pull'
 alias gpu='git push'
 alias grb='git rebase '
 alias grbi='git rebase -i '
