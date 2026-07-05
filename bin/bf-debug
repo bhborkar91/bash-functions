@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "${BASH_FUNCTIONS_DEBUG:-}" != "true" ]; then
+  exit 0
+fi
+
+if [ "$#" -eq 0 ]; then
+  exit 0
+fi
+
+printf '[bash-functions][debug] %s\n' "$*" >&2

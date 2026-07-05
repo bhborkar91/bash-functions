@@ -7,6 +7,12 @@ require_cmd() {
 	command -v "$cmd" >/dev/null 2>&1
 }
 
+_bf_debug() {
+	if require_cmd bf-debug; then
+		bf-debug "$@"
+	fi
+}
+
 # this needs to be a function, not a script in bin
 # because 
 # 1. it sets a variable in the current shell
@@ -54,20 +60,27 @@ refresh_sources() {
 	local line path hash_var previous_hash current_hash
 	local i first_changed=-1
 
+	_bf_debug "refresh_sources: start"
+
 	if ! require_cmd auto-refresh-config-list; then
+		_bf_debug "refresh_sources: auto-refresh-config-list not found, skipping"
 		return 0
 	fi
 
 	mapfile -t entries < <(auto-refresh-config-list)
 	if [ "${#entries[@]}" -eq 0 ]; then
+		_bf_debug "refresh_sources: no configured files, skipping"
 		return 0
 	fi
+	_bf_debug "refresh_sources: loaded ${#entries[@]} configured file(s)"
 
 	for i in "${!entries[@]}"; do
 		line="${entries[$i]}"
 		path="${line#*$'\t'}"
+		_bf_debug "refresh_sources: checking hash for $path"
 		current_hash="$(_auto_refresh_file_hash "$path" 2>/dev/null || true)"
 		if [ -z "$current_hash" ]; then
+			_bf_debug "refresh_sources: unable to hash unreadable/missing file $path"
 			continue
 		fi
 
@@ -75,14 +88,19 @@ refresh_sources() {
 		previous_hash="${!hash_var:-}"
 
 		if [ "$current_hash" != "$previous_hash" ]; then
+			_bf_debug "refresh_sources: change detected at index $i for $path"
 			first_changed="$i"
 			break
+		else
+			_bf_debug "refresh_sources: no change for $path"
 		fi
 	done
 
 	if [ "$first_changed" -lt 0 ]; then
+		_bf_debug "refresh_sources: no changes detected across all configured files"
 		return 0
 	fi
+	_bf_debug "refresh_sources: cascading re-source from index $first_changed"
 
 	for (( i=first_changed; i<${#entries[@]}; i++ )); do
 		line="${entries[$i]}"
@@ -90,16 +108,24 @@ refresh_sources() {
 
 		if [ ! -r "$path" ]; then
 			echo "Warning: unable to read auto-refresh file: $path" >&2
+			_bf_debug "refresh_sources: skipping unreadable file during cascade $path"
 			continue
 		fi
 
+		_bf_debug "refresh_sources: sourcing $path"
 		# shellcheck disable=SC1090
-		source "$path" || return 1
+		if ! source "$path"; then
+			_bf_debug "refresh_sources: source failed for $path"
+			return 1
+		fi
 
 		current_hash="$(_auto_refresh_file_hash "$path")"
 		hash_var="$(_auto_refresh_hash_var_for_path "$path")"
 		printf -v "$hash_var" '%s' "$current_hash"
+		_bf_debug "refresh_sources: updated hash var $hash_var for $path"
 	done
+
+	_bf_debug "refresh_sources: completed"
 }
 
 configure_auto_refresh() {
