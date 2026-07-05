@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: $(basename "$0") FILE_PATH PRIORITY" >&2
+  exit 2
+}
+
+if [ "$#" -ne 2 ]; then
+  usage
+fi
+
+file_path="$1"
+priority="$2"
+
+if [[ -z "$file_path" ]]; then
+  echo "Error: file path is required" >&2
+  exit 2
+fi
+
+if ! [[ "$priority" =~ ^-?[0-9]+$ ]]; then
+  echo "Error: priority must be an integer" >&2
+  exit 2
+fi
+
+config_dir="$HOME/.config"
+config_file="$config_dir/bash-function-source-config"
+
+mkdir -p -- "$config_dir"
+
+tmpfile="$(mktemp "$config_file.XXXXXX")"
+
+if [ -f "$config_file" ]; then
+  awk -F '\t' -v target_path="$file_path" '
+    BEGIN { OFS="\t" }
+    /^[[:space:]]*$/ { next }
+    /^[[:space:]]*#/ { next }
+    index($0, "\t") == 0 { next }
+    {
+      p = $1
+      sub(/^[^\t]*\t/, "", $0)
+      path = $0
+      if (path == target_path) {
+        next
+      }
+      if (p ~ /^-?[0-9]+$/ && path != "") {
+        print p, path
+      }
+    }
+  ' "$config_file" > "$tmpfile"
+fi
+
+printf '%s\t%s\n' "$priority" "$file_path" >> "$tmpfile"
+
+sort -n -k1,1 -t $'\t' "$tmpfile" > "${tmpfile}.sorted"
+mv -- "${tmpfile}.sorted" "$tmpfile"
+mv -- "$tmpfile" "$config_file"

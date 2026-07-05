@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config_file="$HOME/.config/bash-function-source-config"
+
+if [ ! -f "$config_file" ]; then
+  exit 0
+fi
+
+awk -F '\t' '
+  BEGIN { OFS="\t" }
+  /^[[:space:]]*$/ { next }
+  /^[[:space:]]*#/ { next }
+  index($0, "\t") == 0 { next }
+  {
+    p = $1
+    sub(/^[^\t]*\t/, "", $0)
+    path = $0
+    if (p ~ /^-?[0-9]+$/ && path != "") {
+      print p, path
+    }
+  }
+' "$config_file" | sort -n -k1,1 -t $'\t'
