@@ -13,30 +13,6 @@ _bf_debug() {
 	fi
 }
 
-# this needs to be a function, not a script in bin
-# because 
-# 1. it sets a variable in the current shell
-# 2. it needs to source the target so it must run as a function in the current shell
-refresh_source_if_changed() {
-	local hash_var="$1"
-	local file_path="$2"
-	local current_hash
-
-	if ! require_cmd sha256sum; then
-		return 1
-	fi
-
-	current_hash="$(sha256sum "${file_path}" | awk '{print $1}')"
-
-	if [[ "${current_hash}" != "${!hash_var:-}" ]]; then
-        echo "Detected changes in functions-and-aliases.sh. Refreshing functions and aliases..."
-		# shellcheck disable=SC1090
-		source "${file_path}"
-
-		printf -v "$hash_var" '%s' "${current_hash}"
-	fi
-}
-
 _auto_refresh_hash_var_for_path() {
 	local file_path="$1"
 	local digest
@@ -77,6 +53,11 @@ refresh_sources() {
 	for i in "${!entries[@]}"; do
 		line="${entries[$i]}"
 		path="${line#*$'\t'}"
+		if [[ "$path" != /* ]]; then
+			echo "Warning: skipping non-absolute auto-refresh path: $path" >&2
+			_bf_debug "refresh_sources: skipping non-absolute path during change detection $path"
+			continue
+		fi
 		_bf_debug "refresh_sources: checking hash for $path"
 		current_hash="$(_auto_refresh_file_hash "$path" 2>/dev/null || true)"
 		if [ -z "$current_hash" ]; then
@@ -106,12 +87,19 @@ refresh_sources() {
 		line="${entries[$i]}"
 		path="${line#*$'\t'}"
 
+		if [[ "$path" != /* ]]; then
+			echo "Warning: skipping non-absolute auto-refresh path: $path" >&2
+			_bf_debug "refresh_sources: skipping non-absolute path during cascade $path"
+			continue
+		fi
+
 		if [ ! -r "$path" ]; then
 			echo "Warning: unable to read auto-refresh file: $path" >&2
 			_bf_debug "refresh_sources: skipping unreadable file during cascade $path"
 			continue
 		fi
 
+		echo "Auto-refresh sourcing: $path"
 		_bf_debug "refresh_sources: sourcing $path"
 		# shellcheck disable=SC1090
 		if ! source "$path"; then
@@ -129,28 +117,13 @@ refresh_sources() {
 }
 
 configure_auto_refresh() {
-	local hash_var="$1"
-	local file_path="$2"
-	local priority="${3:-20}"
-
-	if ! require_cmd sha256sum; then
-		return 1
-	fi
-
-	if require_cmd auto-refresh-config-upsert && [[ "$priority" =~ ^-?[0-9]+$ ]]; then
-		auto-refresh-config-upsert "$file_path" "$priority" >/dev/null 2>&1 || true
-	fi
-
-	if [[ "$PROMPT_COMMAND" != *"refresh_source_if_changed ${hash_var} \"${file_path}\""* ]]; then
-		PROMPT_COMMAND="refresh_source_if_changed ${hash_var} \"${file_path}\"; ${PROMPT_COMMAND:-:}"
-	fi
-
-	if [[ "$PROMPT_COMMAND" != *"refresh_sources"* ]]; then
-		PROMPT_COMMAND="refresh_sources; ${PROMPT_COMMAND:-:}"
-	fi
+	echo "Warning: configure_auto_refresh is deprecated and has no effect." >&2
+	return 0
 }
 
-configure_auto_refresh "_BASH_FUNCTIONS_HASH" "${BASH_SOURCE[0]}" 20
+if [[ "$PROMPT_COMMAND" != *"refresh_sources"* ]]; then
+	PROMPT_COMMAND="refresh_sources; ${PROMPT_COMMAND:-:}"
+fi
 
 # section: vars
 PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)") \$ '
