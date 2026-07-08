@@ -13,6 +13,12 @@ Subcommands:
     By default, merge commits are excluded.
     Pass --include-merges to include merge commits.
   hist  Print git history using the same formatted output as git-ops.
+  branch-push <branch>
+    Save current location (branch/tag/commit) and checkout <branch>.
+    No-op if workspace is dirty or checkout fails.
+  branch-pop
+    Checkout the latest saved location and remove it from saved stack.
+    No-op if workspace is dirty.
 
 Output format:
   [date] [commit id] message [committer] (branch and tag info)
@@ -20,11 +26,104 @@ EOF
   exit 2
 }
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+set_config_cmd="$script_dir/set-config"
+get_config_cmd="$script_dir/get-config"
+
 ensure_git_repo() {
   if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "Error: not inside a git repository" >&2
     exit 1
   fi
+}
+
+ensure_clean_workspace() {
+  if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+    echo "Error: workspace is dirty; commit/stash changes before switching branches" >&2
+    exit 1
+  fi
+}
+
+get_repo_stack_key() {
+  local repo_root
+
+  repo_root="$(git rev-parse --show-toplevel)"
+  printf 'git-ops.branch-stack::%s\n' "$repo_root"
+}
+
+get_current_location_token() {
+  local branch_name
+  local tag_name
+  local commit_sha
+
+  branch_name="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+  if [ -n "$branch_name" ]; then
+    printf 'branch::%s\n' "$branch_name"
+    return 0
+  fi
+
+  tag_name="$(git describe --tags --exact-match 2>/dev/null || true)"
+  if [ -n "$tag_name" ]; then
+    printf 'tag::%s\n' "$tag_name"
+    return 0
+  fi
+
+  commit_sha="$(git rev-parse HEAD)"
+  printf 'commit::%s\n' "$commit_sha"
+}
+
+resolve_checkout_ref_from_token() {
+  local token="$1"
+
+  case "$token" in
+    branch::*)
+      printf '%s\n' "${token#branch::}"
+      ;;
+    tag::*)
+      printf 'refs/tags/%s\n' "${token#tag::}"
+      ;;
+    commit::*)
+      printf '%s\n' "${token#commit::}"
+      ;;
+    *)
+      # Backward compatibility for untyped saved entries.
+      printf '%s\n' "$token"
+      ;;
+  esac
+}
+
+append_stack_entry() {
+  local stack_key="$1"
+  local entry="$2"
+  local current_stack
+  local updated_stack
+
+  current_stack="$($get_config_cmd "$stack_key" "")"
+  if [ -n "$current_stack" ]; then
+    updated_stack="$current_stack"$'\n'"$entry"
+  else
+    updated_stack="$entry"
+  fi
+
+  "$set_config_cmd" "$stack_key" "$updated_stack" >/dev/null
+}
+
+pop_stack_entry() {
+  local stack="$1"
+  local top_entry
+  local remaining_stack
+
+  top_entry="${stack##*$'\n'}"
+
+  if [[ "$stack" == *$'\n'* ]]; then
+    remaining_stack="${stack%$'\n'*}"
+  else
+    remaining_stack=""
+  fi
+
+  printf '%s\n' "$top_entry"
+  printf '%s\n' "$remaining_stack"
 }
 
 get_upstream_ref() {
@@ -106,6 +205,67 @@ cmd_hist() {
   echo
 }
 
+cmd_branch_push() {
+  local target_branch
+  local stack_key
+  local current_location
+
+  if [ "$#" -ne 1 ]; then
+    usage
+  fi
+
+  target_branch="$1"
+
+  ensure_git_repo
+  ensure_clean_workspace
+
+  stack_key="$(get_repo_stack_key)"
+  current_location="$(get_current_location_token)"
+
+  if ! git checkout "$target_branch"; then
+    echo "Error: failed to checkout '$target_branch'; not updating saved stack" >&2
+    exit 1
+  fi
+
+  append_stack_entry "$stack_key" "$current_location"
+}
+
+cmd_branch_pop() {
+  local stack_key
+  local current_stack
+  local popped
+  local top_token
+  local remaining_stack
+  local checkout_ref
+
+  if [ "$#" -ne 0 ]; then
+    usage
+  fi
+
+  ensure_git_repo
+  ensure_clean_workspace
+
+  stack_key="$(get_repo_stack_key)"
+  current_stack="$($get_config_cmd "$stack_key" "")"
+
+  if [ -z "$current_stack" ]; then
+    echo "No saved branch stack for this repository"
+    return 0
+  fi
+
+  popped="$(pop_stack_entry "$current_stack")"
+  top_token="$(printf '%s\n' "$popped" | sed -n '1p')"
+  remaining_stack="$(printf '%s\n' "$popped" | sed -n '2,$p')"
+  checkout_ref="$(resolve_checkout_ref_from_token "$top_token")"
+
+  if ! git checkout "$checkout_ref"; then
+    echo "Error: failed to checkout saved location '$checkout_ref'; saved stack unchanged" >&2
+    exit 1
+  fi
+
+  "$set_config_cmd" "$stack_key" "$remaining_stack" >/dev/null
+}
+
 main() {
   local subcommand
 
@@ -125,6 +285,12 @@ main() {
       ;;
     hist)
       cmd_hist "$@"
+      ;;
+    branch-push)
+      cmd_branch_push "$@"
+      ;;
+    branch-pop)
+      cmd_branch_pop "$@"
       ;;
     *)
       usage
