@@ -6,14 +6,17 @@ The purpose of this project is to build an easily-installable repository of comm
 
 ## Installation
 
-Run `./install.sh` to add the `bin/` folder to your PATH. The script:
-- Adds the bin directory to `~/.bashrc`, `~/.zshrc` (if they exist), and `~/.profile`
-- Is idempotent (won't add duplicates if run multiple times)
-- Enables scripts to be called from both terminal and GUI launchers (Alt+F2)
+Run `./install.sh` to install the project and wire it into your shell. The script:
+- Clones this repository to `<install_dir>/bash-functions` (defaults to the parent of the current checkout when run from a full clone, otherwise `$HOME/.local`)
+- Adds to `~/.bashrc`:
+  - `export PATH="$PATH:<install_dir>/bash-functions/bin"`
+  - `source "<install_dir>/bash-functions/functions-and-aliases.sh"`
+  - `source "$HOME/.bash/git-prompt.sh"`
+- Downloads `git-prompt.sh` to `~/.bash/git-prompt.sh` if it is missing
+- Adds `config/gitconfig` from this repo to Git global includes (`git config --global --add include.path ...`), idempotently
 
 After installation:
 - **For terminal**: restart your terminal or run `source ~/.bashrc`
-- **For GUI launchers**: log out and log back in
 
 ---
 
@@ -28,7 +31,14 @@ After installation:
   - Usage: `get-config KEY [DEFAULT]`
   - Reads `KEY` from `$HOME/.config/bash-function-config.json` and prints the value.
   - If `KEY` is missing, prints `DEFAULT` when provided.
-  - Exits non-zero with a clear error if `jq`, the config file, or the key is missing.
+  - If the config file is missing, prints `DEFAULT` when provided.
+  - Exits non-zero with a clear error if `jq` is missing or no value/default can be resolved.
+
+- **`bin/get-credential`** 🔐
+  - Usage: `get-credential <key> [--1p] [--1p-label LABEL]`
+  - Default mode: prompts for a hidden credential in terminal and prints it.
+  - `--1p`: retrieves the value from 1Password CLI (`op item get ...`).
+  - `--1p-label LABEL`: selects a specific 1Password field label (default: `password`).
 
 - **`bin/repo`** 📁
   - Usage: `repo [-s <search>] [-c] <org>/<repo>` (options can appear before or after the org/repo argument)
@@ -58,33 +68,42 @@ After installation:
   - Usage: `git-ops <subcommand>`
   - Subcommands:
     - `in`: Prints incoming commits (commits in upstream that are not in `HEAD`).
+      - By default merge commits are excluded; pass `--include-merges` to include them.
     - `out`: Prints outgoing commits (commits in `HEAD` that are not in upstream).
+      - By default merge commits are excluded; pass `--include-merges` to include them.
     - `hist`: Works like `git log` but prints using the same git-ops format. Extra args are forwarded to `git log`.
     - `top [n]`: Works like `hist` but only prints the last `n` commits. Defaults to `1`.
+    - `branch-push <branch>`: Saves current location (branch/tag/commit) into a per-repo stack and checks out `<branch>`. Refuses to run when the workspace is dirty.
+    - `branch-pop`: Checks out the most recently saved location from the per-repo stack. Refuses to run when the workspace is dirty.
   - Prints commits in a colorized format:
     `[date] [commit id] message [committer] (branch and tag info)`
   - Output is always newline-terminated.
   - Exits with a clear error when run outside a Git repository or when no upstream is configured for the current branch.
 
----
+- **`bin/auto-refresh-config-upsert`** 🔁
+  - Usage: `auto-refresh-config-upsert FILE_PATH PRIORITY`
+  - Upserts `FILE_PATH` into `$HOME/.config/bash-function-source-config` with integer `PRIORITY`.
+  - Keeps config sorted by ascending priority.
 
-## Tests
+- **`bin/auto-refresh-config-list`** 📜
+  - Usage: `auto-refresh-config-list`
+  - Prints normalized entries from `$HOME/.config/bash-function-source-config` as tab-separated `priority<TAB>path`, sorted ascending.
 
-- Test runner: `./test/run` — runs all `test/test_*.sh` scripts.
-- Individual tests:
-  - `./test/test_set_config.sh`
-  - `./test/test_get_config.sh`
-- Note: tests create repo-local temporary directories under `test/` (e.g. `test/tmp_home.XXXXXX`) which are ignored by `.gitignore` and left for manual cleanup.
+- **`bin/bf-debug`** 🐞
+  - Usage: `bf-debug <message...>`
+  - Emits debug logs to stderr only when `BASH_FUNCTIONS_DEBUG=true`.
 
 ---
 
 ## Development notes
 
-- These scripts depend on `jq` and `git` for JSON handling and cloning respectively. Make sure they are installed.
+- Core dependencies: `bash`, `git`, and `jq`.
+- `wget` is required by `install.sh` (to fetch `git-prompt.sh`).
 - `zenity` is only required when a command actually runs in zenity mode (explicitly via `bash-functions.ui-mode=zenity` or auto mode in non-interactive contexts).
+- `op` (1Password CLI) is only required when using `get-credential --1p`.
 
 ---
 
 ## Audit / Logs
 
-- Interaction history and prompts used during development are recorded in `prompts.md`. See `./prompts.md` for details.
+- Planning and implementation notes are tracked under `plans/`.
