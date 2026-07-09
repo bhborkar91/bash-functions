@@ -197,9 +197,10 @@ cmd_out() {
 cmd_hist() {
   ensure_git_repo
 
-  git log --color=always "$@" \
+  git log --color=always \
     --date=short \
-    --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)'
+    --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)' \
+    "$@" 
 
   # Keep output newline-terminated for predictable terminal rendering.
   echo
