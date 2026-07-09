@@ -138,6 +138,8 @@ alias fresh='. ~/.bashrc'
 alias g='git'
 alias ga='git add '
 alias gb='git branch '
+alias gbpu='git branch-push'
+alias gbpo='git branch-pop'
 alias gc='git commit'
 alias gcf='git commit --amend -m "$(git log -1 --pretty=%B)"'
 alias gco='git checkout '
@@ -153,7 +155,7 @@ alias gs='git status'
 alias gst='git stash'
 alias gsta='git stash apply'
 alias gstp='git stash pop'
-
+alias gto='git top'
 
 # section: Functions
 

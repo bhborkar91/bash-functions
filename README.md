@@ -60,6 +60,7 @@ After installation:
     - `in`: Prints incoming commits (commits in upstream that are not in `HEAD`).
     - `out`: Prints outgoing commits (commits in `HEAD` that are not in upstream).
     - `hist`: Works like `git log` but prints using the same git-ops format. Extra args are forwarded to `git log`.
+    - `top [n]`: Works like `hist` but only prints the last `n` commits. Defaults to `1`.
   - Prints commits in a colorized format:
     `[date] [commit id] message [committer] (branch and tag info)`
   - Output is always newline-terminated.

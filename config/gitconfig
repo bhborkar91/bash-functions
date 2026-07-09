@@ -1,0 +1,7 @@
+[alias]
+	in = !git-ops in
+	out = !git-ops out
+	hist = !git-ops hist
+    branch-push = !git-ops branch-push
+    branch-pop = !git-ops branch-pop
+    top = !git-ops top

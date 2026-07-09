@@ -13,6 +13,9 @@ Subcommands:
     By default, merge commits are excluded.
     Pass --include-merges to include merge commits.
   hist  Print git history using the same formatted output as git-ops.
+  top [n]
+    Print the last n commits using the same formatted output as git-ops.
+    Defaults to 1 if n is omitted.
   branch-push <branch>
     Save current location (branch/tag/commit) and checkout <branch>.
     No-op if workspace is dirty or checkout fails.
@@ -154,6 +157,29 @@ print_commit_log() {
   echo
 }
 
+print_history_log() {
+  local max_count="$1"
+  shift
+
+  local git_args=("$@")
+
+  if [ -n "$max_count" ]; then
+    git --no-pager log --color=always \
+      --date=short \
+      --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)' \
+      --max-count="$max_count" \
+      "${git_args[@]}"
+  else
+    git --no-pager log --color=always \
+      --date=short \
+      --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)' \
+      "${git_args[@]}"
+  fi
+
+  # Keep output newline-terminated for predictable terminal rendering.
+  echo
+}
+
 parse_include_merges_flag() {
   if [ "$#" -eq 0 ]; then
     echo "false"
@@ -197,13 +223,36 @@ cmd_out() {
 cmd_hist() {
   ensure_git_repo
 
-  git log --color=always \
-    --date=short \
-    --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)' \
-    "$@" 
+  print_history_log "" "$@"
+}
 
-  # Keep output newline-terminated for predictable terminal rendering.
-  echo
+validate_positive_integer() {
+  local value="$1"
+
+  if [[ "$value" =~ ^[1-9][0-9]*$ ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
+cmd_top() {
+  local max_count
+
+  if [ "$#" -gt 1 ]; then
+    usage
+  fi
+
+  max_count="${1:-1}"
+
+  if ! validate_positive_integer "$max_count"; then
+    echo "Error: top expects a positive integer count" >&2
+    exit 2
+  fi
+
+  ensure_git_repo
+
+  print_history_log "$max_count"
 }
 
 cmd_branch_push() {
@@ -286,6 +335,9 @@ main() {
       ;;
     hist)
       cmd_hist "$@"
+      ;;
+    top)
+      cmd_top "$@"
       ;;
     branch-push)
       cmd_branch_push "$@"
