@@ -70,8 +70,6 @@ if [ ! -f "$HOME/.bash/git-prompt.sh" ]; then
   wget -q -O "$HOME/.bash/git-prompt.sh" https://raw.githubusercontent.com/git/git/fbcdfab34852329929e6bfdd2bac8e49f2e3d8e3/contrib/completion/git-prompt.sh
 fi
 
-append_if_missing "$bashrc_file" "source \"\$HOME/.bash/git-prompt.sh\""
-
 ensure_global_include_path "$repo_dir/config/gitconfig"
 
 echo "Installation complete. Restart your shell or run: source $bashrc_file"

@@ -128,6 +128,11 @@ fi
 auto-refresh-config-upsert "${BASH_SOURCE[0]}" "10"
 
 # section: vars
+if [ -r "$HOME/.bash/git-prompt.sh" ]; then
+	# shellcheck disable=SC1090
+	source "$HOME/.bash/git-prompt.sh"
+fi
+
 PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)") \n\$ '
 export GIT_PS1_SHOWUPSTREAM=verbose
 export GIT_PS1_SHOWDIRTYSTATE=1
