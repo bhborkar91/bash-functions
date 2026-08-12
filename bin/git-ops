@@ -143,11 +143,11 @@ print_commit_log() {
   local include_merges="$2"
 
   if [ "$include_merges" = "true" ]; then
-    git --no-pager log --color=always "$rev_range" \
+    git log --color=always "$rev_range" \
       --date=short \
       --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)'
   else
-    git --no-pager log --color=always "$rev_range" \
+    git log --color=always "$rev_range" \
       --no-merges \
       --date=short \
       --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)'
@@ -164,13 +164,13 @@ print_history_log() {
   local git_args=("$@")
 
   if [ -n "$max_count" ]; then
-    git --no-pager log --color=always \
+    git log --color=always \
       --date=short \
       --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)' \
       --max-count="$max_count" \
       "${git_args[@]}"
   else
-    git --no-pager log --color=always \
+    git log --color=always \
       --date=short \
       --pretty=format:'%C(yellow)[%ad]%C(reset) %C(cyan)[%h]%C(reset) %s %C(green)[%cn]%C(reset) %C(magenta)(%D)%C(reset)' \
       "${git_args[@]}"

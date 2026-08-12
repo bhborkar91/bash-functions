@@ -93,12 +93,27 @@ After installation:
   - Usage: `bf-debug <message...>`
   - Emits debug logs to stderr only when `BASH_FUNCTIONS_DEBUG=true`.
 
+- **`bin/mp-convert`** 🎵
+  - Usage: `mp-convert [-d DIR] [-f FROM_EXT] [-t TO_EXT] [-b BITRATE] [-c CODEC] [--dry-run]`
+  - Converts media files from one extension to another using `ffmpeg`.
+  - Defaults convert all `.mp4` files in the current directory to `.mp3` using `libmp3lame` at `160k`.
+  - Uses `--dry-run` to list the conversions without executing them.
+  - Example: `mp-convert -d ~/Videos -f mp4 -t mp3`
+
+- **`bin/mp-trim`** ✂️
+  - Usage: `mp-trim -i INPUT -e END [-s START] [-o OUTPUT]`
+  - Trims a media file using `ffmpeg` with copy mode.
+  - `START` defaults to `00:00:00`.
+  - `OUTPUT` defaults to the input filename with `_output` appended; if that file exists, it adds `_1`, `_2`, etc.
+  - Example: `mp-trim -i input.mp4 -e 00:03:48`
+
 ---
 
 ## Development notes
 
 - Core dependencies: `bash`, `git`, and `jq`.
 - `wget` is required by `install.sh` (to fetch `git-prompt.sh`).
+- `ffmpeg` is required by `bin/mp-convert` and `bin/mp-trim`.
 - `zenity` is only required when a command actually runs in zenity mode (explicitly via `bash-functions.ui-mode=zenity` or auto mode in non-interactive contexts).
 - `op` (1Password CLI) is only required when using `get-credential --1p`.
 

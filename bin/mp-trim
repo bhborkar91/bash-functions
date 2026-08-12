@@ -1,0 +1,89 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+  cat <<EOF >&2
+Usage: mp-trim -i INPUT -e END [-s START] [-o OUTPUT]
+
+Trim a media file using ffmpeg copy mode.
+Options:
+  -i, --input   INPUT   Source media file
+  -s, --start   START   Trim start time (default: 00:00:00)
+  -e, --end     END     Trim end time (required)
+  -o, --output  OUTPUT  Output file path (default: <input>_output<ext>)
+
+Example: mp-trim -i input.mp4 -s 00:01:00 -e 00:03:48 -o trimmed.mp4
+EOF
+}
+
+input=""
+start="00:00:00"
+end=""
+output=""
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -i|--input)
+      shift
+      input="${1:-}"
+      ;;
+    -s|--start)
+      shift
+      start="${1:-}"
+      ;;
+    -e|--end)
+      shift
+      end="${1:-}"
+      ;;
+    -o|--output)
+      shift
+      output="${1:-}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [ -z "$input" ] || [ -z "$end" ]; then
+  echo "Error: --input and --end are required." >&2
+  usage
+  exit 1
+fi
+
+if [ ! -f "$input" ]; then
+  echo "Error: input file does not exist: $input" >&2
+  exit 1
+fi
+
+if [ -z "$output" ]; then
+  input_dir="$(dirname "$input")"
+  input_name="$(basename "$input")"
+  input_base="${input_name%.*}"
+  input_ext="${input_name##*.}"
+  if [ "$input_base" = "$input_name" ]; then
+    output="${input_dir}/${input_base}_output"
+  else
+    output="${input_dir}/${input_base}_output.${input_ext}"
+  fi
+
+  index=1
+  while [ -e "$output" ]; do
+    if [ "$input_base" = "$input_name" ]; then
+      output="${input_dir}/${input_base}_output_${index}"
+    else
+      output="${input_dir}/${input_base}_output_${index}.${input_ext}"
+    fi
+    index=$((index + 1))
+  done
+fi
+
+/usr/bin/ffmpeg -y -i "$input" -ss "$start" -to "$end" -c copy "$output" < /dev/null

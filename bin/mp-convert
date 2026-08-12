@@ -1,0 +1,117 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF' >&2
+Usage: mp-convert [OPTIONS]
+
+Convert media files from one extension to another using ffmpeg.
+By default, this converts all .mp4 files in the current directory to .mp3 files.
+
+Options:
+  -d, --directory DIR     Directory to scan (default: .)
+  -f, --from EXT         Input extension to convert (default: mp4)
+  -t, --to EXT           Output extension (default: mp3)
+  -b, --bitrate RATE     Audio bitrate for output (default: 160k)
+  -c, --codec CODEC      FFmpeg audio codec (default: libmp3lame)
+  -n, --dry-run          Show the files that would be converted without running ffmpeg
+  -h, --help             Show this help message
+
+Examples:
+  mp-convert
+  mp-convert -d ~/Videos -f mp4 -t mp3
+  mp-convert -d . -f mov -t mp3 --dry-run
+EOF
+}
+
+directory="."
+from_ext="mp4"
+to_ext="mp3"
+bitrate="160k"
+codec="libmp3lame"
+dry_run=false
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -d|--directory)
+      shift
+      directory="${1:-}"
+      ;;
+    -f|--from)
+      shift
+      from_ext="${1:-}"
+      ;;
+    -t|--to)
+      shift
+      to_ext="${1:-}"
+      ;;
+    -b|--bitrate)
+      shift
+      bitrate="${1:-}"
+      ;;
+    -c|--codec)
+      shift
+      codec="${1:-}"
+      ;;
+    -n|--dry-run)
+      dry_run=true
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Error: unknown argument: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [ -z "$directory" ]; then
+  echo "Error: directory cannot be empty." >&2
+  usage
+  exit 1
+fi
+
+if [ ! -d "$directory" ]; then
+  echo "Error: directory does not exist: $directory" >&2
+  exit 1
+fi
+
+if [ -z "$from_ext" ] || [ -z "$to_ext" ]; then
+  echo "Error: both input and output extensions are required." >&2
+  usage
+  exit 1
+fi
+
+shopt -s nullglob
+files=("$directory"/*."$from_ext")
+
+if [ "${#files[@]}" -eq 0 ]; then
+  echo "No .$from_ext files found in $directory" >&2
+  exit 0
+fi
+
+for file in "${files[@]}"; do
+  output="${file%.*}.${to_ext}"
+  index=1
+  while [ -e "$output" ]; do
+    output="${file%.*}.${index}.${to_ext}"
+    index=$((index + 1))
+  done
+
+  if [ "$dry_run" = true ]; then
+    echo "$file -> $output"
+    continue
+  fi
+
+  echo "Converting: $file -> $output"
+  /usr/bin/ffmpeg -y -i "$file" -acodec "$codec" -vn -b:a "$bitrate" -ac 2 -ar 44100 "$output" < /dev/null
+done
