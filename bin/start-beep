@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "Beeping..."
+while true; do
+  play -n synth 0.1 tri 1000.0
+  sleep 1
+done >/dev/null 2>&1

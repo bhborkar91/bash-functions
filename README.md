@@ -107,6 +107,10 @@ After installation:
   - `OUTPUT` defaults to the input filename with `_output` appended; if that file exists, it adds `_1`, `_2`, etc.
   - Example: `mp-trim -i input.mp4 -e 00:03:48`
 
+- **`bin/start-beep`** 🔔
+  - Usage: `start-beep`
+  - Plays a repeating 1000 Hz beep until interrupted.
+
 ---
 
 ## Development notes
@@ -114,6 +118,7 @@ After installation:
 - Core dependencies: `bash`, `git`, and `jq`.
 - `wget` is required by `install.sh` (to fetch `git-prompt.sh`).
 - `ffmpeg` is required by `bin/mp-convert` and `bin/mp-trim`.
+- `play` is required by `bin/start-beep`.
 - `zenity` is only required when a command actually runs in zenity mode (explicitly via `bash-functions.ui-mode=zenity` or auto mode in non-interactive contexts).
 - `op` (1Password CLI) is only required when using `get-credential --1p`.
 
