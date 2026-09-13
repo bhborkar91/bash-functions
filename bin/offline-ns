@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: offline-ns [--no-info] [--] <command> [args...]
+
+Runs the given command in a Linux network namespace named "offline".
+The namespace and loopback setup are created on first use if needed.
+If the session is not a terminal, the script prefers a graphical privilege prompt
+when available, and falls back to sudo if not.
+
+Options:
+  --no-info    Skip the sudoers NOPASSWD guidance.
+  -h, --help   Show this help.
+EOF
+  exit 2
+}
+
+show_sudoers_info() {
+  local user_name ip_bin
+  user_name="${USER:-$(id -un 2>/dev/null || echo "$USER")}" 
+  ip_bin="$(command -v ip 2>/dev/null || echo /usr/sbin/ip)"
+
+  cat >&2 <<EOF
+Info: to stop being prompted for sudo when using offline-ns, add this to /etc/sudoers.d/offline-ns:
+
+  ${user_name} ALL=(root) NOPASSWD: ${ip_bin} netns add offline, ${ip_bin} netns exec offline ip link set lo up, ${ip_bin} netns exec offline sudo -u ${user_name} *
+
+Then validate it with:
+
+  sudo visudo -f /etc/sudoers.d/offline-ns
+
+EOF
+}
+
+show_error_notification() {
+  local message="$1"
+
+  if [ -n "${DISPLAY:-}" ] && command -v zenity >/dev/null 2>&1; then
+    zenity --error --title="offline-ns failed" --text="$message" 2>/dev/null || true
+  fi
+
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "offline-ns failed" "$message" 2>/dev/null || true
+  fi
+
+  echo "$message" >&2
+}
+
+run_privileged() {
+  local -a cmd=("$@")
+
+  if [ -t 0 ] && [ -t 1 ]; then
+    sudo -- "${cmd[@]}"
+    return
+  fi
+
+  if command -v pkexec >/dev/null 2>&1; then
+    pkexec env DISPLAY="${DISPLAY:-}" XAUTHORITY="${XAUTHORITY:-}" /usr/bin/env bash -c 'exec "$@"' _ "${cmd[@]}"
+    return
+  fi
+
+  sudo -- "${cmd[@]}"
+}
+
+ensure_offline_namespace() {
+  if ! run_privileged sh -c 'ip netns list 2>/dev/null | awk "{print \$1}" | grep -Fxq "offline"'; then
+    if ! run_privileged ip netns add offline; then
+      return 1
+    fi
+  fi
+
+  if ! run_privileged sh -c 'ip netns exec offline ip link show lo 2>/dev/null | grep -Eq "state (UP|UNKNOWN)"'; then
+    if ! run_privileged ip netns exec offline ip link set lo up; then
+      return 1
+    fi
+  fi
+}
+
+main() {
+  local show_info=1
+  local user_name
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --no-info)
+        show_info=0
+        shift
+        ;;
+      -h|--help)
+        usage
+        ;;
+      --)
+        shift
+        break
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  if [ "$#" -eq 0 ]; then
+    usage
+  fi
+
+  user_name="${USER:-$(id -un 2>/dev/null || echo root)}"
+
+  if [ "$show_info" -eq 1 ]; then
+    show_sudoers_info
+  fi
+
+  if ! ensure_offline_namespace; then
+    show_error_notification "offline-ns: failed to prepare the \"offline\" network namespace."
+    exit 1
+  fi
+
+  if [ -t 0 ] && [ -t 1 ]; then
+    if ! sudo ip netns exec offline sudo -u "$user_name" -- "$@"; then
+      show_error_notification "offline-ns: failed while running command in the \"offline\" namespace."
+      exit 1
+    fi
+    return
+  fi
+
+  if command -v pkexec >/dev/null 2>&1; then
+    if ! pkexec env DISPLAY="${DISPLAY:-}" XAUTHORITY="${XAUTHORITY:-}" /usr/bin/env bash -c 'exec ip netns exec offline sudo -u "$1" -- "${@:2}"' _ "$user_name" "$@"; then
+      show_error_notification "offline-ns: failed while running command in the \"offline\" namespace."
+      exit 1
+    fi
+    return
+  fi
+
+  if ! sudo ip netns exec offline sudo -u "$user_name" -- "$@"; then
+    show_error_notification "offline-ns: failed while running command in the \"offline\" namespace."
+    exit 1
+  fi
+}
+
+main "$@"

@@ -64,6 +64,13 @@ After installation:
     - empty/unset: auto mode (if `zenity` is missing use terminal; otherwise choose terminal when interactive and `zenity` when non-interactive)
   - Outputs `y` for yes and `n` for all other outcomes, and always exits 0.
 
+- **`bin/offline-ns`** 🛡️
+  - Usage: `offline-ns [--no-info] [--] <command> [args...]`
+  - Creates a persistent Linux network namespace named `offline` if it does not already exist, ensures loopback is up, and then runs the provided command inside it.
+  - The first use performs the one-time setup automatically: `sudo ip netns add offline` and `sudo ip netns exec offline ip link set lo up`.
+  - If the command is not launched from a terminal, it prefers `pkexec`/`zenity` and shows a notification/error popup when the sandbox setup or execution fails.
+  - `--no-info` suppresses the sudoers hint for enabling `NOPASSWD` execution.
+
 - **`bin/git-ops`** 🌿
   - Usage: `git-ops <subcommand>`
   - Subcommands:
